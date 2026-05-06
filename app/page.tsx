@@ -1,5 +1,5 @@
 import { portfolio } from "@/data/portfolio"
-import { getQuote } from "@/lib/prices"
+import { getQuote, getPerformance } from "@/lib/yahoo"
 
 export const revalidate = 300
 
@@ -26,12 +26,26 @@ function formatARS(value: number) {
   }).format(value)
 }
 
+function Pct({ value }: { value: number | null }) {
+  if (value === null) return <span className="text-gray-400">—</span>
+  const color = value >= 0 ? "text-emerald-600" : "text-red-500"
+  const sign = value >= 0 ? "+" : ""
+  return (
+    <span className={color}>
+      {sign}{value.toFixed(1)}%
+    </span>
+  )
+}
+
 export default async function Page() {
   const holdings = await Promise.all(
     portfolio.map(async (h) => {
-      const precio = await getQuote(h.ticker)
+      const [precio, perf] = await Promise.all([
+        getQuote(h.ticker),
+        getPerformance(h.ticker),
+      ])
       const valuacion = precio !== null ? precio * h.nominales : null
-      return { ...h, precio, valuacion }
+      return { ...h, precio, valuacion, perf }
     })
   )
 
@@ -42,7 +56,7 @@ export default async function Page() {
 
   return (
     <main className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">FGS — Cartera de Acciones</h1>
           <p className="text-sm text-gray-500 mt-1">Actualizado: {ahora}</p>
@@ -55,7 +69,7 @@ export default async function Page() {
                 <th className="px-4 py-3 text-left uppercase">Ticker</th>
                 <th className="px-4 py-3 text-right">
                   <div className="uppercase">Nominales</div>
-                  <div className="font-normal text-gray-400">(en millones)</div>
+                  <div className="font-normal text-gray-400">(millones)</div>
                 </th>
                 <th className="px-4 py-3 text-right">
                   <div className="uppercase">Precio</div>
@@ -63,9 +77,12 @@ export default async function Page() {
                 </th>
                 <th className="px-4 py-3 text-right">
                   <div className="uppercase">Valuación</div>
-                  <div className="font-normal text-gray-400">(en miles de millones $)</div>
+                  <div className="font-normal text-gray-400">(miles de mill. $)</div>
                 </th>
                 <th className="px-4 py-3 text-right uppercase">% Cartera</th>
+                <th className="px-4 py-3 text-right uppercase">1S</th>
+                <th className="px-4 py-3 text-right uppercase">1M</th>
+                <th className="px-4 py-3 text-right uppercase">1A</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -88,6 +105,9 @@ export default async function Page() {
                       ? `${((h.valuacion / total) * 100).toFixed(1)}%`
                       : "—"}
                   </td>
+                  <td className="px-4 py-3 text-right"><Pct value={h.perf.w1} /></td>
+                  <td className="px-4 py-3 text-right"><Pct value={h.perf.m1} /></td>
+                  <td className="px-4 py-3 text-right"><Pct value={h.perf.y1} /></td>
                 </tr>
               ))}
             </tbody>
@@ -95,7 +115,7 @@ export default async function Page() {
               <tr>
                 <td className="px-4 py-4 font-bold" colSpan={3}>Total</td>
                 <td className="px-4 py-4 text-right font-bold text-lg">{formatMM(total)}</td>
-                <td className="px-4 py-4 text-right">100%</td>
+                <td className="px-4 py-4 text-right" colSpan={4}>100%</td>
               </tr>
             </tfoot>
           </table>
