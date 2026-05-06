@@ -46,7 +46,7 @@ export async function getPerformance(ticker: string): Promise<Performance> {
     const priceNDaysAgo = (days: number): number | null => {
       const target = new Date(today)
       target.setDate(today.getDate() - days)
-      const filtered = history.filter((h) => new Date(h.date) <= target)
+      const filtered = history.filter((h: { date: Date; close: number }) => new Date(h.date) <= target)
       return filtered.length > 0 ? filtered[filtered.length - 1].close : null
     }
 
