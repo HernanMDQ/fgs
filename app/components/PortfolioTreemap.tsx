@@ -8,6 +8,7 @@ interface Node {
   size: number
   pct: number
   sector: string
+  [key: string]: unknown
 }
 
 interface Props {
