@@ -45,7 +45,7 @@ export default function SectorBars({ data }: Props) {
           tickLine={false}
         />
         <Tooltip
-          formatter={(value: number) => [`${value.toFixed(1)}%`, "Participación"]}
+          formatter={(value) => [`${Number(value).toFixed(1)}%`, "Participación"]}
           cursor={{ fill: "#f3f4f6" }}
         />
         <Bar dataKey="pct" radius={[0, 4, 4, 0]}>
