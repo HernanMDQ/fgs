@@ -5,9 +5,14 @@ const yahooFinance = new YahooFinance({
   validation: { logErrors: false, logOptionsErrors: false },
 })
 
+// Tickers cuyo símbolo en Yahoo Finance difiere del de BYMA
+const TICKER_MAP: Record<string, string> = {
+  CEPU2: "CEPU",
+}
+
 export async function getQuote(ticker: string): Promise<number | null> {
   try {
-    const result = await yahooFinance.quote(`${ticker}.BA`, {}, { validateResult: false })
+    const result = await yahooFinance.quote(`${TICKER_MAP[ticker] ?? ticker}.BA`, {}, { validateResult: false })
     return result?.regularMarketPrice ?? null
   } catch {
     return null
@@ -26,7 +31,7 @@ const fetchHistory = unstable_cache(
     const oneYearAgo = new Date(today)
     oneYearAgo.setFullYear(today.getFullYear() - 1)
     return yahooFinance.historical(
-      `${ticker}.BA`,
+      `${TICKER_MAP[ticker] ?? ticker}.BA`,
       { period1: oneYearAgo, period2: today, interval: "1d" },
       { validateResult: false }
     )
